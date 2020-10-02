@@ -10,9 +10,54 @@ const { body, param, validationResult } = require('express-validator');
 
 const cors = require('cors');
 
+const jwt = require('jsonwebtoken');
+const secret = "horse power apple";
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors()); // allow all CORS request
+
+const users = [
+    { username: "Alice", password: "12345", role: "admin" },
+    { username: "Bob", password: "12345", role: "user" },
+];
+
+
+app.post("/api/login", function (req, res) {
+    const { username, password } = req.body;
+    const user = users.find(function (u) {
+        return u.username === username && u.password === password;
+    });
+    if (auth) {
+        jwt.sign(user, secret, {
+            expiresIn: "1h"
+        }, function (err, token) {
+            return res.status(200).json({ token }); // return JWT token
+        });
+    } else {
+        return res.sendStatus(401);
+    }
+});
+
+function auth(req, res, next) {
+    const authHeader = req.headers["authorization"];
+    if (!authHeader) return res.sendStatus(401);
+    const [type, token] = authHeader.split(" ");
+    if (type !== "Bearer") return res.sendStatus(401);
+    jwt.verify(token, secret, function (err, data) {
+        if (err) return res.sendStatus(401);
+        else next();
+    });
+
+}
+
+function onlyAdmin(req, res, next) {
+    const [type, token] = req.headers["authorization"].split(" ");
+    jwt.verify(token, secret, function (err, data) {
+        if (data.role === "admin") next();
+        else return res.sendStatus(403);
+    });
+}
 
 // If CORS want to allow spectific host(origin),domain,port
 // app.use(cors({
@@ -30,7 +75,7 @@ app.use(cors()); // allow all CORS request
 // });
 
 // get all
-app.get('/api/records', function (req, res) {
+app.get('/api/records', auth, onlyAdmin, function (req, res) {
 
     // allow CORS request
     // res.append("Access-Control-Allow-Origin", "*");
