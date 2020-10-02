@@ -1,0 +1,8 @@
+<script> fetch("http://localhost:8080/api/records")
+        .then(function (res) {
+            return res.json();
+        })
+        .then(function (json) {
+            console.log(json);
+        });
+</script>

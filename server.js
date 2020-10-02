@@ -8,11 +8,35 @@ const bodyParser = require('body-parser');
 
 const { body, param, validationResult } = require('express-validator');
 
+const cors = require('cors');
+
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(cors()); // allow all CORS request
+
+// If CORS want to allow spectific host(origin),domain,port
+// app.use(cors({
+//     origin: ["http://a.com", "http://b.com"],
+//     methods: ["GET", "POST"],
+//     allowHeaders: ["Authorization", "Content-Type"]
+// }));
+
+// allow all CORS (Cross-Origin Resource Sharing) request by using middleware (app.use())
+// app.use(function (req, res, next) {
+//     res.append("Access-Control-Allow-Origin", "*");
+//     res.append("Access-Control-Allow-Methods", "*");
+//     res.append("Access-Control-Allow-Headers", "*");
+//     next();
+// });
 
 // get all
 app.get('/api/records', function (req, res) {
+
+    // allow CORS request
+    // res.append("Access-Control-Allow-Origin", "*");
+    // res.append("Access-Control-Allow-Methods", "*");
+    // res.append("Access-Control-Allow-Headers", "*");
+
     const options = req.query;
     const sort = options.sort || {};
     const filter = options.filter || {};
@@ -64,7 +88,7 @@ app.get("/api/records/:id", [
             const option = {
                 _id: mongojs.ObjectId(_id),
             }
-            db.records.find(option,function (err, data) {
+            db.records.find(option, function (err, data) {
                 if (err) {
                     return res.sendStatus(500);
                 } else {
